@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -23,12 +22,10 @@ const GOALS: { value: GoalType; label: string }[] = [
 ];
 
 const OnboardingPage = () => {
-  const { t, language } = useLanguage();
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const totalSteps = 4;
 
-  // Form state
   const [name, setName] = useState('');
   const [studentClass, setStudentClass] = useState<number>(9);
   const [board, setBoard] = useState<Board>('CBSE');
@@ -39,7 +36,6 @@ const OnboardingPage = () => {
   const [pace, setPace] = useState<Pace>('normal');
   const [hours, setHours] = useState(5);
 
-  // Quiz state
   const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[]>([]);
   const [quizAnswers, setQuizAnswers] = useState<Record<string, number>>({});
 
@@ -75,7 +71,6 @@ const OnboardingPage = () => {
       pace,
       hoursPerWeek: hours,
       quizScore: score,
-      language,
       createdAt: new Date().toISOString(),
     };
 
@@ -94,12 +89,11 @@ const OnboardingPage = () => {
     navigate('/dashboard');
   };
 
-  const steps = [t('onboarding.step1'), t('onboarding.step2'), t('onboarding.step3'), t('onboarding.step4')];
+  const steps = ['Your Profile', 'Subjects & Goals', 'Quick Assessment', 'Preferences'];
 
   return (
     <div className="min-h-screen py-10">
       <div className="container max-w-2xl">
-        {/* Progress */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-3">
             {steps.map((label, i) => (
@@ -130,12 +124,12 @@ const OnboardingPage = () => {
                 {step === 0 && (
                   <>
                     <div className="space-y-2">
-                      <Label>{t('onboarding.name')}</Label>
+                      <Label>Full Name</Label>
                       <Input value={name} onChange={e => setName(e.target.value)} placeholder="Enter your name" />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label>{t('onboarding.class')}</Label>
+                        <Label>Class</Label>
                         <Select value={String(studentClass)} onValueChange={v => setStudentClass(Number(v))}>
                           <SelectTrigger><SelectValue /></SelectTrigger>
                           <SelectContent>
@@ -146,7 +140,7 @@ const OnboardingPage = () => {
                         </Select>
                       </div>
                       <div className="space-y-2">
-                        <Label>{t('onboarding.board')}</Label>
+                        <Label>Board</Label>
                         <Select value={board} onValueChange={v => setBoard(v as Board)}>
                           <SelectTrigger><SelectValue /></SelectTrigger>
                           <SelectContent>
@@ -158,7 +152,7 @@ const OnboardingPage = () => {
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label>{t('onboarding.school')}</Label>
+                      <Label>School Name</Label>
                       <Input value={school} onChange={e => setSchool(e.target.value)} placeholder="Your school name" />
                     </div>
                   </>
@@ -167,7 +161,7 @@ const OnboardingPage = () => {
                 {step === 1 && (
                   <>
                     <div className="space-y-2">
-                      <Label>{t('onboarding.subjects')}</Label>
+                      <Label>Select Subjects</Label>
                       <div className="flex flex-wrap gap-2">
                         {SUBJECTS.map(s => (
                           <Badge
@@ -182,7 +176,7 @@ const OnboardingPage = () => {
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label>{t('onboarding.goals')}</Label>
+                      <Label>Learning Goals</Label>
                       <div className="flex flex-wrap gap-2">
                         {GOALS.map(g => (
                           <Badge
@@ -229,7 +223,7 @@ const OnboardingPage = () => {
                 {step === 3 && (
                   <>
                     <div className="space-y-2">
-                      <Label>{t('onboarding.style')}</Label>
+                      <Label>Preferred Learning Style</Label>
                       <div className="flex gap-2">
                         {(['video', 'text', 'interactive'] as LearningStyle[]).map(s => (
                           <Badge
@@ -244,7 +238,7 @@ const OnboardingPage = () => {
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label>{t('onboarding.pace')}</Label>
+                      <Label>Learning Pace</Label>
                       <div className="flex gap-2">
                         {(['slow', 'normal', 'fast'] as Pace[]).map(p => (
                           <Badge
@@ -259,7 +253,7 @@ const OnboardingPage = () => {
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label>{t('onboarding.hours')}: {hours}h / week</Label>
+                      <Label>Hours per Week: {hours}h / week</Label>
                       <input
                         type="range"
                         min={1}
@@ -275,16 +269,16 @@ const OnboardingPage = () => {
                 <div className="flex justify-between pt-4">
                   <Button variant="outline" onClick={() => setStep(s => s - 1)} disabled={step === 0}>
                     <ArrowLeft className="mr-2 h-4 w-4" />
-                    {t('onboarding.back')}
+                    Back
                   </Button>
                   {step < totalSteps - 1 ? (
                     <Button onClick={handleNext}>
-                      {t('onboarding.next')}
+                      Continue
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                   ) : (
                     <Button onClick={handleFinish}>
-                      {t('onboarding.finish')}
+                      Start Learning
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                   )}

@@ -1,17 +1,14 @@
 import { Link, useLocation } from 'react-router-dom';
-import { useLanguage } from '@/contexts/LanguageContext';
-import LanguageToggle from '@/components/LanguageToggle';
 import { BookOpen, LayoutDashboard, MessageSquare, ShieldCheck } from 'lucide-react';
 
 const Navbar = () => {
-  const { t } = useLanguage();
   const location = useLocation();
 
   const links = [
-    { to: '/', label: t('nav.home'), icon: BookOpen },
-    { to: '/dashboard', label: t('nav.dashboard'), icon: LayoutDashboard },
-    { to: '/feedback', label: t('nav.feedback'), icon: MessageSquare },
-    { to: '/admin', label: t('nav.admin'), icon: ShieldCheck },
+    { to: '/', label: 'Home', icon: BookOpen },
+    { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { to: '/feedback', label: 'Feedback', icon: MessageSquare },
+    { to: '/admin', label: 'Admin', icon: ShieldCheck },
   ];
 
   return (
@@ -40,8 +37,6 @@ const Navbar = () => {
             </Link>
           ))}
         </div>
-
-        <LanguageToggle />
       </div>
     </nav>
   );

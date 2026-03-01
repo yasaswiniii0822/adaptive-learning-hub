@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useLanguage } from '@/contexts/LanguageContext';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
@@ -14,7 +13,6 @@ import { adjustRecommendations } from '@/lib/mockAI';
 import { toast } from '@/hooks/use-toast';
 
 const FeedbackPage = () => {
-  const { t } = useLanguage();
   const navigate = useNavigate();
   const [recommendations, setRecommendations] = useState<CourseRecommendation[]>([]);
   const [selectedCourse, setSelectedCourse] = useState<string>('');
@@ -68,11 +66,10 @@ const FeedbackPage = () => {
   return (
     <div className="min-h-screen py-8">
       <div className="container max-w-2xl">
-        <h1 className="font-heading text-3xl font-bold mb-8">{t('feedback.title')}</h1>
+        <h1 className="font-heading text-3xl font-bold mb-8">Share Your Feedback</h1>
 
         <Card>
           <CardContent className="p-6 space-y-6">
-            {/* Course selection */}
             <div className="space-y-2">
               <Label>Select a course to review</Label>
               <div className="flex flex-wrap gap-2">
@@ -92,7 +89,7 @@ const FeedbackPage = () => {
             {selectedCourse && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-5">
                 <div className="space-y-2">
-                  <Label>{t('feedback.difficulty')}</Label>
+                  <Label>Difficulty Level</Label>
                   <div className="flex gap-2">
                     {['too_easy', 'just_right', 'too_hard'].map(d => (
                       <Badge
@@ -108,7 +105,7 @@ const FeedbackPage = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>{t('feedback.pace')}</Label>
+                  <Label>Pace</Label>
                   <div className="flex gap-2">
                     {['too_slow', 'just_right', 'too_fast'].map(p => (
                       <Badge
@@ -124,10 +121,10 @@ const FeedbackPage = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>{t('feedback.relevance')}</Label>
+                  <Label>Is the content relevant?</Label>
                   <div className="flex gap-2">
-                    <Badge variant={relevant ? 'default' : 'outline'} className="cursor-pointer" onClick={() => setRelevant(true)}>{t('common.yes')}</Badge>
-                    <Badge variant={!relevant ? 'default' : 'outline'} className="cursor-pointer" onClick={() => setRelevant(false)}>{t('common.no')}</Badge>
+                    <Badge variant={relevant ? 'default' : 'outline'} className="cursor-pointer" onClick={() => setRelevant(true)}>Yes</Badge>
+                    <Badge variant={!relevant ? 'default' : 'outline'} className="cursor-pointer" onClick={() => setRelevant(false)}>No</Badge>
                   </div>
                 </div>
 
@@ -138,7 +135,7 @@ const FeedbackPage = () => {
 
                 <Button onClick={handleSubmit} className="w-full">
                   <RefreshCw className="mr-2 h-4 w-4" />
-                  {t('feedback.submit')}
+                  Submit Feedback
                 </Button>
               </motion.div>
             )}
