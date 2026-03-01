@@ -57,7 +57,7 @@ const LandingPage = () => {
               Powered by AI to create a learning path tailored just for you — aligned with NCERT, Board Exams, JEE & NEET.
             </p>
             <div className="mt-10 flex items-center justify-center gap-4">
-              <Button size="lg" onClick={() => navigate('/onboarding')} className="gap-2 text-base">
+              <Button size="lg" onClick={() => navigate('/auth')} className="gap-2 text-base">
                 Get Started Free
                 <ArrowRight className="h-5 w-5" />
               </Button>

@@ -1,8 +1,11 @@
 import { Link, useLocation } from 'react-router-dom';
-import { BookOpen, LayoutDashboard, MessageSquare, ShieldCheck } from 'lucide-react';
+import { BookOpen, LayoutDashboard, MessageSquare, ShieldCheck, LogOut, LogIn } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { Button } from '@/components/ui/button';
 
 const Navbar = () => {
   const location = useLocation();
+  const { user, signOut } = useAuth();
 
   const links = [
     { to: '/', label: 'Home', icon: BookOpen },
@@ -21,21 +24,36 @@ const Navbar = () => {
           <span className="font-heading text-xl font-bold">VidyaPath</span>
         </Link>
 
-        <div className="hidden items-center gap-1 md:flex">
-          {links.map(({ to, label, icon: Icon }) => (
-            <Link
-              key={to}
-              to={to}
-              className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors
-                ${location.pathname === to
-                  ? 'bg-primary/10 text-primary'
-                  : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                }`}
-            >
-              <Icon className="h-4 w-4" />
-              {label}
+        <div className="flex items-center gap-1">
+          <div className="hidden items-center gap-1 md:flex">
+            {links.map(({ to, label, icon: Icon }) => (
+              <Link
+                key={to}
+                to={to}
+                className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors
+                  ${location.pathname === to
+                    ? 'bg-primary/10 text-primary'
+                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                  }`}
+              >
+                <Icon className="h-4 w-4" />
+                {label}
+              </Link>
+            ))}
+          </div>
+          {user ? (
+            <Button variant="ghost" size="sm" onClick={signOut} className="ml-2">
+              <LogOut className="h-4 w-4 mr-1" />
+              Sign Out
+            </Button>
+          ) : (
+            <Link to="/auth">
+              <Button variant="ghost" size="sm" className="ml-2">
+                <LogIn className="h-4 w-4 mr-1" />
+                Sign In
+              </Button>
             </Link>
-          ))}
+          )}
         </div>
       </div>
     </nav>
