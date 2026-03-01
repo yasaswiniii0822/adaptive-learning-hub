@@ -77,7 +77,7 @@ const OnboardingPage = () => {
       createdAt: new Date().toISOString(),
     };
 
-    store.setProfile(profile);
+    await store.setProfile(profile);
     setIsGenerating(true);
 
     try {
@@ -88,7 +88,7 @@ const OnboardingPage = () => {
       if (error) throw error;
 
       if (data?.recommendations && Array.isArray(data.recommendations)) {
-        store.setRecommendations(data.recommendations);
+        await store.setRecommendations(data.recommendations);
         toast({ title: 'AI Recommendations Ready', description: `Generated ${data.recommendations.length} personalized courses for you!` });
       } else if (data?.error) {
         throw new Error(data.error);
@@ -102,15 +102,14 @@ const OnboardingPage = () => {
         description: 'AI was unavailable, but we still generated a learning path for you.',
         variant: 'destructive',
       });
-      // Fallback to mock
       const { generateRecommendations } = await import('@/lib/mockAI');
       const recs = generateRecommendations(profile);
-      store.setRecommendations(recs);
+      await store.setRecommendations(recs);
     } finally {
       setIsGenerating(false);
     }
 
-    store.addSessionLog({
+    await store.addSessionLog({
       id: crypto.randomUUID(),
       studentId: profile.id,
       studentName: profile.name,

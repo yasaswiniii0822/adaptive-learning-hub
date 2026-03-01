@@ -3,36 +3,31 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { motion } from 'framer-motion';
-import { Users, BookOpen, ClipboardCheck, MessageSquare } from 'lucide-react';
+import { Users, BookOpen, ClipboardCheck, MessageSquare, Loader2 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { SessionLog } from '@/types/student';
 import { store } from '@/lib/store';
 
 const COLORS = ['hsl(250,65%,55%)', 'hsl(165,60%,42%)', 'hsl(38,92%,50%)', 'hsl(0,72%,51%)', 'hsl(200,70%,50%)'];
 
-const seedData = () => {
-  const existing = store.getSessionLogs();
-  if (existing.length >= 5) return;
-
-  const sampleLogs: SessionLog[] = [
-    { id: '1', studentId: 's1', studentName: 'Aarav Sharma', action: 'onboarding_complete', details: 'Class 9, CBSE, Quiz Score: 65%', timestamp: '2025-02-20T10:30:00Z' },
-    { id: '2', studentId: 's2', studentName: 'Priya Patel', action: 'onboarding_complete', details: 'Class 11, ICSE, Quiz Score: 82%', timestamp: '2025-02-21T14:15:00Z' },
-    { id: '3', studentId: 's1', studentName: 'Aarav Sharma', action: 'course_started', details: 'Class 9 Maths Foundation (Video Series)', timestamp: '2025-02-20T10:35:00Z' },
-    { id: '4', studentId: 's3', studentName: 'Rohan Kumar', action: 'feedback_submitted', details: 'Course: Physics, Difficulty: too_easy, Pace: too_slow', timestamp: '2025-02-22T09:00:00Z' },
-    { id: '5', studentId: 's2', studentName: 'Priya Patel', action: 'course_started', details: 'JEE Physics Crash Course', timestamp: '2025-02-21T14:20:00Z' },
-    { id: '6', studentId: 's4', studentName: 'Ananya Gupta', action: 'onboarding_complete', details: 'Class 10, State Board, Quiz Score: 45%', timestamp: '2025-02-23T11:00:00Z' },
-    { id: '7', studentId: 's5', studentName: 'Vikram Singh', action: 'onboarding_complete', details: 'Class 12, CBSE, Quiz Score: 90%', timestamp: '2025-02-24T16:00:00Z' },
-  ];
-  sampleLogs.forEach(l => store.addSessionLog(l));
-};
-
 const AdminDashboard = () => {
   const [logs, setLogs] = useState<SessionLog[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    seedData();
-    setLogs(store.getSessionLogs());
+    const load = async () => {
+      const data = await store.getSessionLogs();
+      setLogs(data);
+      setLoading(false);
+    };
+    load();
   }, []);
+
+  if (loading) return (
+    <div className="min-h-screen flex items-center justify-center">
+      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+    </div>
+  );
 
   const totalStudents = new Set(logs.filter(l => l.action === 'onboarding_complete').map(l => l.studentId)).size;
   const totalAssessments = logs.filter(l => l.action === 'onboarding_complete').length;
@@ -134,7 +129,7 @@ const AdminDashboard = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {logs.slice().reverse().map(log => (
+                {logs.map(log => (
                   <TableRow key={log.id}>
                     <TableCell className="font-medium">{log.studentName}</TableCell>
                     <TableCell>

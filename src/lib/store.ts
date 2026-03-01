@@ -1,46 +1,172 @@
+import { supabase } from '@/integrations/supabase/client';
 import { StudentProfile, CourseRecommendation, FeedbackEntry, SessionLog } from '@/types/student';
 
-const KEYS = {
-  profile: 'vidyapath_profile',
-  recommendations: 'vidyapath_recommendations',
-  feedback: 'vidyapath_feedback',
-  sessions: 'vidyapath_sessions',
-};
+const PROFILE_ID_KEY = 'vidyapath_profile_id';
+
+// Helper to convert DB row to StudentProfile
+function rowToProfile(row: any): StudentProfile {
+  return {
+    id: row.id,
+    name: row.name,
+    class: row.class,
+    board: row.board,
+    schoolName: row.school_name,
+    subjects: row.subjects || [],
+    goals: row.goals || [],
+    learningStyle: row.learning_style,
+    pace: row.pace,
+    hoursPerWeek: row.hours_per_week,
+    quizScore: row.quiz_score,
+    createdAt: row.created_at,
+  };
+}
+
+function rowToRecommendation(row: any): CourseRecommendation {
+  return {
+    id: row.id,
+    title: row.title,
+    description: row.description,
+    difficulty: row.difficulty,
+    estimatedWeeks: row.estimated_weeks,
+    resourceType: row.resource_type,
+    subject: row.subject,
+    links: row.links || [],
+    priority: row.priority,
+    progress: row.progress,
+    status: row.status,
+    weeklyPlan: row.weekly_plan || [],
+  };
+}
+
+function rowToSessionLog(row: any): SessionLog {
+  return {
+    id: row.id,
+    studentId: row.profile_id,
+    studentName: row.student_name,
+    action: row.action,
+    details: row.details,
+    timestamp: row.created_at,
+  };
+}
+
+function rowToFeedback(row: any): FeedbackEntry {
+  return {
+    id: row.id,
+    studentId: row.profile_id,
+    courseId: row.course_id,
+    rating: row.rating,
+    paceRating: row.pace_rating,
+    relevance: row.relevance,
+    freeText: row.free_text,
+    timestamp: row.created_at,
+  };
+}
 
 export const store = {
-  getProfile: (): StudentProfile | null => {
-    const data = localStorage.getItem(KEYS.profile);
-    return data ? JSON.parse(data) : null;
+  // Profile ID stored locally to identify current student
+  getProfileId: (): string | null => localStorage.getItem(PROFILE_ID_KEY),
+  setProfileId: (id: string) => localStorage.setItem(PROFILE_ID_KEY, id),
+
+  getProfile: async (): Promise<StudentProfile | null> => {
+    const id = store.getProfileId();
+    if (!id) return null;
+    const { data } = await supabase.from('student_profiles').select('*').eq('id', id).single();
+    return data ? rowToProfile(data) : null;
   },
-  setProfile: (profile: StudentProfile) => {
-    localStorage.setItem(KEYS.profile, JSON.stringify(profile));
+
+  setProfile: async (profile: StudentProfile): Promise<void> => {
+    await supabase.from('student_profiles').upsert({
+      id: profile.id,
+      name: profile.name,
+      class: profile.class,
+      board: profile.board,
+      school_name: profile.schoolName,
+      subjects: profile.subjects,
+      goals: profile.goals,
+      learning_style: profile.learningStyle,
+      pace: profile.pace,
+      hours_per_week: profile.hoursPerWeek,
+      quiz_score: profile.quizScore,
+    });
+    store.setProfileId(profile.id);
   },
-  getRecommendations: (): CourseRecommendation[] => {
-    const data = localStorage.getItem(KEYS.recommendations);
-    return data ? JSON.parse(data) : [];
+
+  getRecommendations: async (profileId?: string): Promise<CourseRecommendation[]> => {
+    const id = profileId || store.getProfileId();
+    if (!id) return [];
+    const { data } = await supabase.from('recommendations').select('*').eq('profile_id', id);
+    return (data || []).map(rowToRecommendation);
   },
-  setRecommendations: (recs: CourseRecommendation[]) => {
-    localStorage.setItem(KEYS.recommendations, JSON.stringify(recs));
+
+  setRecommendations: async (recs: CourseRecommendation[], profileId?: string): Promise<void> => {
+    const id = profileId || store.getProfileId();
+    if (!id) return;
+    // Delete old recommendations for this profile
+    await supabase.from('recommendations').delete().eq('profile_id', id);
+    if (recs.length === 0) return;
+    await supabase.from('recommendations').insert(
+      recs.map(r => ({
+        id: r.id,
+        profile_id: id,
+        title: r.title,
+        description: r.description,
+        difficulty: r.difficulty,
+        estimated_weeks: r.estimatedWeeks,
+        resource_type: r.resourceType,
+        subject: r.subject,
+        links: r.links,
+        priority: r.priority,
+        progress: r.progress,
+        status: r.status,
+        weekly_plan: r.weeklyPlan || [],
+      }))
+    );
   },
-  getFeedback: (): FeedbackEntry[] => {
-    const data = localStorage.getItem(KEYS.feedback);
-    return data ? JSON.parse(data) : [];
+
+  updateRecommendation: async (rec: CourseRecommendation): Promise<void> => {
+    await supabase.from('recommendations').update({
+      progress: rec.progress,
+      status: rec.status,
+      difficulty: rec.difficulty,
+      estimated_weeks: rec.estimatedWeeks,
+    }).eq('id', rec.id);
   },
-  addFeedback: (entry: FeedbackEntry) => {
-    const existing = store.getFeedback();
-    existing.push(entry);
-    localStorage.setItem(KEYS.feedback, JSON.stringify(existing));
+
+  getFeedback: async (profileId?: string): Promise<FeedbackEntry[]> => {
+    const id = profileId || store.getProfileId();
+    if (!id) return [];
+    const { data } = await supabase.from('feedback').select('*').eq('profile_id', id);
+    return (data || []).map(rowToFeedback);
   },
-  getSessionLogs: (): SessionLog[] => {
-    const data = localStorage.getItem(KEYS.sessions);
-    return data ? JSON.parse(data) : [];
+
+  addFeedback: async (entry: FeedbackEntry): Promise<void> => {
+    await supabase.from('feedback').insert({
+      id: entry.id,
+      profile_id: entry.studentId,
+      course_id: entry.courseId,
+      rating: entry.rating,
+      pace_rating: entry.paceRating,
+      relevance: entry.relevance,
+      free_text: entry.freeText,
+    });
   },
-  addSessionLog: (log: SessionLog) => {
-    const existing = store.getSessionLogs();
-    existing.push(log);
-    localStorage.setItem(KEYS.sessions, JSON.stringify(existing));
+
+  getSessionLogs: async (): Promise<SessionLog[]> => {
+    const { data } = await supabase.from('session_logs').select('*').order('created_at', { ascending: false });
+    return (data || []).map(rowToSessionLog);
   },
+
+  addSessionLog: async (log: SessionLog): Promise<void> => {
+    await supabase.from('session_logs').insert({
+      id: log.id,
+      profile_id: log.studentId,
+      student_name: log.studentName,
+      action: log.action,
+      details: log.details,
+    });
+  },
+
   clearAll: () => {
-    Object.values(KEYS).forEach(k => localStorage.removeItem(k));
+    localStorage.removeItem(PROFILE_ID_KEY);
   },
 };

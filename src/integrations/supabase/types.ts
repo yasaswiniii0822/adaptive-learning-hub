@@ -14,7 +14,193 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      feedback: {
+        Row: {
+          course_id: string
+          created_at: string
+          free_text: string
+          id: string
+          pace_rating: string
+          profile_id: string
+          rating: string
+          relevance: boolean
+        }
+        Insert: {
+          course_id: string
+          created_at?: string
+          free_text?: string
+          id?: string
+          pace_rating?: string
+          profile_id: string
+          rating?: string
+          relevance?: boolean
+        }
+        Update: {
+          course_id?: string
+          created_at?: string
+          free_text?: string
+          id?: string
+          pace_rating?: string
+          profile_id?: string
+          rating?: string
+          relevance?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feedback_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "recommendations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "feedback_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "student_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      recommendations: {
+        Row: {
+          created_at: string
+          description: string
+          difficulty: string
+          estimated_weeks: number
+          id: string
+          links: string[]
+          priority: string
+          profile_id: string
+          progress: number
+          resource_type: string
+          status: string
+          subject: string
+          title: string
+          weekly_plan: string[] | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string
+          difficulty?: string
+          estimated_weeks?: number
+          id?: string
+          links?: string[]
+          priority?: string
+          profile_id: string
+          progress?: number
+          resource_type?: string
+          status?: string
+          subject?: string
+          title: string
+          weekly_plan?: string[] | null
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          difficulty?: string
+          estimated_weeks?: number
+          id?: string
+          links?: string[]
+          priority?: string
+          profile_id?: string
+          progress?: number
+          resource_type?: string
+          status?: string
+          subject?: string
+          title?: string
+          weekly_plan?: string[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recommendations_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "student_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      session_logs: {
+        Row: {
+          action: string
+          created_at: string
+          details: string
+          id: string
+          profile_id: string
+          student_name: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          details?: string
+          id?: string
+          profile_id: string
+          student_name: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          details?: string
+          id?: string
+          profile_id?: string
+          student_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_logs_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "student_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_profiles: {
+        Row: {
+          board: string
+          class: number
+          created_at: string
+          goals: string[]
+          hours_per_week: number
+          id: string
+          learning_style: string
+          name: string
+          pace: string
+          quiz_score: number | null
+          school_name: string
+          subjects: string[]
+        }
+        Insert: {
+          board: string
+          class: number
+          created_at?: string
+          goals?: string[]
+          hours_per_week?: number
+          id?: string
+          learning_style?: string
+          name: string
+          pace?: string
+          quiz_score?: number | null
+          school_name?: string
+          subjects?: string[]
+        }
+        Update: {
+          board?: string
+          class?: number
+          created_at?: string
+          goals?: string[]
+          hours_per_week?: number
+          id?: string
+          learning_style?: string
+          name?: string
+          pace?: string
+          quiz_score?: number | null
+          school_name?: string
+          subjects?: string[]
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
