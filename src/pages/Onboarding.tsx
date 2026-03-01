@@ -8,10 +8,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CheckCircle2, Loader2 } from 'lucide-react';
 import { StudentProfile, Board, GoalType, LearningStyle, Pace, QuizQuestion } from '@/types/student';
-import { generateQuizQuestions, generateRecommendations } from '@/lib/mockAI';
+import { generateQuizQuestions } from '@/lib/mockAI';
 import { store } from '@/lib/store';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
 
 const SUBJECTS = ['Mathematics', 'Physics', 'Chemistry', 'Biology', 'English', 'Hindi', 'Social Science', 'Computer Science'];
 const GOALS: { value: GoalType; label: string }[] = [
@@ -24,6 +26,7 @@ const GOALS: { value: GoalType; label: string }[] = [
 const OnboardingPage = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
+  const [isGenerating, setIsGenerating] = useState(false);
   const totalSteps = 4;
 
   const [name, setName] = useState('');
@@ -53,7 +56,7 @@ const OnboardingPage = () => {
     if (step < totalSteps - 1) setStep(step + 1);
   };
 
-  const handleFinish = () => {
+  const handleFinish = async () => {
     const correctCount = quizQuestions.reduce((acc, q) => {
       return acc + (quizAnswers[q.id] === q.correctAnswer ? 1 : 0);
     }, 0);
@@ -75,8 +78,38 @@ const OnboardingPage = () => {
     };
 
     store.setProfile(profile);
-    const recs = generateRecommendations(profile);
-    store.setRecommendations(recs);
+    setIsGenerating(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('recommend', {
+        body: { profile },
+      });
+
+      if (error) throw error;
+
+      if (data?.recommendations && Array.isArray(data.recommendations)) {
+        store.setRecommendations(data.recommendations);
+        toast({ title: 'AI Recommendations Ready', description: `Generated ${data.recommendations.length} personalized courses for you!` });
+      } else if (data?.error) {
+        throw new Error(data.error);
+      } else {
+        throw new Error('Invalid response from AI');
+      }
+    } catch (err: any) {
+      console.error('AI recommendation error:', err);
+      toast({
+        title: 'Using fallback recommendations',
+        description: 'AI was unavailable, but we still generated a learning path for you.',
+        variant: 'destructive',
+      });
+      // Fallback to mock
+      const { generateRecommendations } = await import('@/lib/mockAI');
+      const recs = generateRecommendations(profile);
+      store.setRecommendations(recs);
+    } finally {
+      setIsGenerating(false);
+    }
+
     store.addSessionLog({
       id: crypto.randomUUID(),
       studentId: profile.id,
@@ -277,9 +310,18 @@ const OnboardingPage = () => {
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                   ) : (
-                    <Button onClick={handleFinish}>
-                      Start Learning
-                      <ArrowRight className="ml-2 h-4 w-4" />
+                    <Button onClick={handleFinish} disabled={isGenerating}>
+                      {isGenerating ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Generating AI Plan...
+                        </>
+                      ) : (
+                        <>
+                          Start Learning
+                          <ArrowRight className="ml-2 h-4 w-4" />
+                        </>
+                      )}
                     </Button>
                   )}
                 </div>
