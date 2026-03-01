@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { motion } from 'framer-motion';
-import { ArrowRight, RefreshCw } from 'lucide-react';
+import { ArrowRight, RefreshCw, Loader2 } from 'lucide-react';
 import { CourseRecommendation, FeedbackEntry } from '@/types/student';
 import { store } from '@/lib/store';
 import { adjustRecommendations } from '@/lib/mockAI';
@@ -21,16 +21,22 @@ const FeedbackPage = () => {
   const [relevant, setRelevant] = useState(true);
   const [freeText, setFreeText] = useState('');
   const [adjusted, setAdjusted] = useState<CourseRecommendation | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const profile = store.getProfile();
-    if (!profile) { navigate('/onboarding'); return; }
-    setRecommendations(store.getRecommendations());
+    const load = async () => {
+      const profile = await store.getProfile();
+      if (!profile) { navigate('/onboarding'); return; }
+      const recs = await store.getRecommendations();
+      setRecommendations(recs);
+      setLoading(false);
+    };
+    load();
   }, [navigate]);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!selectedCourse) return;
-    const profile = store.getProfile()!;
+    const profile = (await store.getProfile())!;
 
     const entry: FeedbackEntry = {
       id: crypto.randomUUID(),
@@ -42,16 +48,18 @@ const FeedbackPage = () => {
       freeText,
       timestamp: new Date().toISOString(),
     };
-    store.addFeedback(entry);
+    await store.addFeedback(entry);
 
     const updated = adjustRecommendations(recommendations, selectedCourse, {
       difficulty, pace: paceRating,
     });
-    store.setRecommendations(updated);
+    // Update each adjusted recommendation in DB
+    const changedRec = updated.find(r => r.id === selectedCourse);
+    if (changedRec) await store.updateRecommendation(changedRec);
     setRecommendations(updated);
-    setAdjusted(updated.find(r => r.id === selectedCourse) || null);
+    setAdjusted(changedRec || null);
 
-    store.addSessionLog({
+    await store.addSessionLog({
       id: crypto.randomUUID(),
       studentId: profile.id,
       studentName: profile.name,
@@ -62,6 +70,12 @@ const FeedbackPage = () => {
 
     toast({ title: 'Feedback Received', description: 'Your recommendations have been adjusted!' });
   };
+
+  if (loading) return (
+    <div className="min-h-screen flex items-center justify-center">
+      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+    </div>
+  );
 
   return (
     <div className="min-h-screen py-8">

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { motion } from 'framer-motion';
-import { BookOpen, Clock, ArrowRight, Play, CheckCircle2, Circle, MessageSquare, RefreshCw, Target } from 'lucide-react';
+import { BookOpen, Clock, ArrowRight, Play, CheckCircle2, Circle, MessageSquare, RefreshCw, Target, Loader2 } from 'lucide-react';
 import { StudentProfile, CourseRecommendation, LearningPathStep } from '@/types/student';
 import { store } from '@/lib/store';
 import { generateLearningPath } from '@/lib/mockAI';
@@ -27,42 +27,53 @@ const Dashboard = () => {
   const [profile, setProfile] = useState<StudentProfile | null>(null);
   const [recommendations, setRecommendations] = useState<CourseRecommendation[]>([]);
   const [learningPath, setLearningPath] = useState<LearningPathStep[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const p = store.getProfile();
-    if (!p) { navigate('/onboarding'); return; }
-    setProfile(p);
-    const recs = store.getRecommendations();
-    setRecommendations(recs);
-    setLearningPath(generateLearningPath(recs));
+    const load = async () => {
+      const p = await store.getProfile();
+      if (!p) { navigate('/onboarding'); return; }
+      setProfile(p);
+      const recs = await store.getRecommendations();
+      setRecommendations(recs);
+      setLearningPath(generateLearningPath(recs));
+      setLoading(false);
+    };
+    load();
   }, [navigate]);
 
-  const handleStart = (id: string) => {
+  const handleStart = async (id: string) => {
     const updated = recommendations.map(r =>
       r.id === id ? { ...r, status: 'in_progress' as const, progress: 10 } : r
     );
     setRecommendations(updated);
-    store.setRecommendations(updated);
-    store.addSessionLog({
+    const rec = updated.find(r => r.id === id)!;
+    await store.updateRecommendation(rec);
+    await store.addSessionLog({
       id: crypto.randomUUID(),
       studentId: profile!.id,
       studentName: profile!.name,
       action: 'course_started',
-      details: recommendations.find(r => r.id === id)?.title || '',
+      details: rec.title,
       timestamp: new Date().toISOString(),
     });
   };
 
-  const handleComplete = (id: string) => {
+  const handleComplete = async (id: string) => {
     const updated = recommendations.map(r =>
       r.id === id ? { ...r, status: 'completed' as const, progress: 100 } : r
     );
     setRecommendations(updated);
-    store.setRecommendations(updated);
     setLearningPath(generateLearningPath(updated));
+    const rec = updated.find(r => r.id === id)!;
+    await store.updateRecommendation(rec);
   };
 
-  if (!profile) return null;
+  if (loading || !profile) return (
+    <div className="min-h-screen flex items-center justify-center">
+      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+    </div>
+  );
 
   const avgProgress = recommendations.length > 0
     ? Math.round(recommendations.reduce((a, r) => a + r.progress, 0) / recommendations.length)
@@ -95,12 +106,7 @@ const Dashboard = () => {
           <div className="lg:col-span-2 space-y-4">
             <h2 className="font-heading text-xl font-semibold">AI Recommendations</h2>
             {recommendations.map((rec, i) => (
-              <motion.div
-                key={rec.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1 }}
-              >
+              <motion.div key={rec.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}>
                 <Card>
                   <CardContent className="p-5">
                     <div className="flex items-start justify-between gap-4">
