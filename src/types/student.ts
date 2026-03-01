@@ -1,5 +1,3 @@
-export type Language = 'en' | 'hi';
-
 export type Board = 'CBSE' | 'ICSE' | 'State';
 export type GoalType = 'board_exam' | 'jee_neet' | 'skill_building' | 'olympiad';
 export type LearningStyle = 'video' | 'text' | 'interactive';
@@ -19,7 +17,6 @@ export interface StudentProfile {
   pace: Pace;
   hoursPerWeek: number;
   quizScore?: number;
-  language: Language;
   createdAt: string;
 }
 

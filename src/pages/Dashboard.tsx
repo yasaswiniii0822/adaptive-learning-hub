@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useLanguage } from '@/contexts/LanguageContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -24,7 +23,6 @@ const priorityColor: Record<string, string> = {
 };
 
 const Dashboard = () => {
-  const { t } = useLanguage();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<StudentProfile | null>(null);
   const [recommendations, setRecommendations] = useState<CourseRecommendation[]>([]);
@@ -73,17 +71,15 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen py-8">
       <div className="container">
-        {/* Welcome */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <h1 className="font-heading text-3xl font-bold">
-            {t('dashboard.welcome')}, {profile.name}! 👋
+            Welcome back, {profile.name}! 👋
           </h1>
           <p className="text-muted-foreground">
             Class {profile.class} • {profile.board} • Quiz Score: {profile.quizScore}%
           </p>
         </motion.div>
 
-        {/* Quick Actions */}
         <div className="mb-8 flex flex-wrap gap-3">
           <Button variant="outline" size="sm" onClick={() => navigate('/onboarding')}>
             <RefreshCw className="mr-2 h-4 w-4" />
@@ -96,9 +92,8 @@ const Dashboard = () => {
         </div>
 
         <div className="grid gap-8 lg:grid-cols-3">
-          {/* Recommendations */}
           <div className="lg:col-span-2 space-y-4">
-            <h2 className="font-heading text-xl font-semibold">{t('dashboard.recommendations')}</h2>
+            <h2 className="font-heading text-xl font-semibold">AI Recommendations</h2>
             {recommendations.map((rec, i) => (
               <motion.div
                 key={rec.id}
@@ -152,12 +147,10 @@ const Dashboard = () => {
             ))}
           </div>
 
-          {/* Sidebar */}
           <div className="space-y-6">
-            {/* Overall Progress */}
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-lg font-heading">{t('dashboard.progress')}</CardTitle>
+                <CardTitle className="text-lg font-heading">Progress Tracker</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-center mb-4">
@@ -182,10 +175,9 @@ const Dashboard = () => {
               </CardContent>
             </Card>
 
-            {/* Learning Path */}
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-lg font-heading">{t('dashboard.learningPath')}</CardTitle>
+                <CardTitle className="text-lg font-heading">Your Learning Path</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">

@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useLanguage } from '@/contexts/LanguageContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -28,7 +27,6 @@ const seedData = () => {
 };
 
 const AdminDashboard = () => {
-  const { t } = useLanguage();
   const [logs, setLogs] = useState<SessionLog[]>([]);
 
   useEffect(() => {
@@ -55,18 +53,17 @@ const AdminDashboard = () => {
   ];
 
   const stats = [
-    { icon: Users, label: t('admin.totalStudents'), value: totalStudents },
-    { icon: ClipboardCheck, label: t('admin.assessments'), value: totalAssessments },
-    { icon: BookOpen, label: t('admin.coursesRecommended'), value: totalCourses },
+    { icon: Users, label: 'Total Students', value: totalStudents },
+    { icon: ClipboardCheck, label: 'Assessments Completed', value: totalAssessments },
+    { icon: BookOpen, label: 'Courses Recommended', value: totalCourses },
     { icon: MessageSquare, label: 'Feedback', value: totalFeedback },
   ];
 
   return (
     <div className="min-h-screen py-8">
       <div className="container">
-        <h1 className="font-heading text-3xl font-bold mb-8">{t('admin.title')}</h1>
+        <h1 className="font-heading text-3xl font-bold mb-8">Admin Dashboard</h1>
 
-        {/* Stats */}
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4 mb-8">
           {stats.map(({ icon: Icon, label, value }, i) => (
             <motion.div key={label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}>
@@ -85,7 +82,6 @@ const AdminDashboard = () => {
           ))}
         </div>
 
-        {/* Charts */}
         <div className="grid gap-6 md:grid-cols-2 mb-8">
           <Card>
             <CardHeader>
@@ -123,10 +119,9 @@ const AdminDashboard = () => {
           </Card>
         </div>
 
-        {/* Session Logs */}
         <Card>
           <CardHeader>
-            <CardTitle className="font-heading text-lg">{t('admin.sessionLogs')}</CardTitle>
+            <CardTitle className="font-heading text-lg">Session Logs</CardTitle>
           </CardHeader>
           <CardContent>
             <Table>
