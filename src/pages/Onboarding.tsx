@@ -13,6 +13,7 @@ import { StudentProfile, Board, GoalType, LearningStyle, Pace, QuizQuestion } fr
 import { generateQuizQuestions } from '@/lib/mockAI';
 import { store } from '@/lib/store';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
 
 const SUBJECTS = ['Mathematics', 'Physics', 'Chemistry', 'Biology', 'English', 'Hindi', 'Social Science', 'Computer Science'];

@@ -1,8 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { StudentProfile, CourseRecommendation, FeedbackEntry, SessionLog } from '@/types/student';
 
-const PROFILE_ID_KEY = 'vidyapath_profile_id';
-
 // Helper to convert DB row to StudentProfile
 function rowToProfile(row: any): StudentProfile {
   return {
@@ -62,21 +60,25 @@ function rowToFeedback(row: any): FeedbackEntry {
   };
 }
 
-export const store = {
-  // Profile ID stored locally to identify current student
-  getProfileId: (): string | null => localStorage.getItem(PROFILE_ID_KEY),
-  setProfileId: (id: string) => localStorage.setItem(PROFILE_ID_KEY, id),
+async function getCurrentUserId(): Promise<string | null> {
+  const { data: { user } } = await supabase.auth.getUser();
+  return user?.id ?? null;
+}
 
+export const store = {
   getProfile: async (): Promise<StudentProfile | null> => {
-    const id = store.getProfileId();
-    if (!id) return null;
-    const { data } = await supabase.from('student_profiles').select('*').eq('id', id).single();
+    const userId = await getCurrentUserId();
+    if (!userId) return null;
+    const { data } = await supabase.from('student_profiles').select('*').eq('user_id', userId).single();
     return data ? rowToProfile(data) : null;
   },
 
   setProfile: async (profile: StudentProfile): Promise<void> => {
+    const userId = await getCurrentUserId();
+    if (!userId) return;
     await supabase.from('student_profiles').upsert({
       id: profile.id,
+      user_id: userId,
       name: profile.name,
       class: profile.class,
       board: profile.board,
@@ -88,26 +90,32 @@ export const store = {
       hours_per_week: profile.hoursPerWeek,
       quiz_score: profile.quizScore,
     });
-    store.setProfileId(profile.id);
   },
 
   getRecommendations: async (profileId?: string): Promise<CourseRecommendation[]> => {
-    const id = profileId || store.getProfileId();
+    let id = profileId;
+    if (!id) {
+      const profile = await store.getProfile();
+      id = profile?.id;
+    }
     if (!id) return [];
     const { data } = await supabase.from('recommendations').select('*').eq('profile_id', id);
     return (data || []).map(rowToRecommendation);
   },
 
   setRecommendations: async (recs: CourseRecommendation[], profileId?: string): Promise<void> => {
-    const id = profileId || store.getProfileId();
+    let id = profileId;
+    if (!id) {
+      const profile = await store.getProfile();
+      id = profile?.id;
+    }
     if (!id) return;
-    // Delete old recommendations for this profile
     await supabase.from('recommendations').delete().eq('profile_id', id);
     if (recs.length === 0) return;
     await supabase.from('recommendations').insert(
       recs.map(r => ({
         id: r.id,
-        profile_id: id,
+        profile_id: id!,
         title: r.title,
         description: r.description,
         difficulty: r.difficulty,
@@ -133,7 +141,11 @@ export const store = {
   },
 
   getFeedback: async (profileId?: string): Promise<FeedbackEntry[]> => {
-    const id = profileId || store.getProfileId();
+    let id = profileId;
+    if (!id) {
+      const profile = await store.getProfile();
+      id = profile?.id;
+    }
     if (!id) return [];
     const { data } = await supabase.from('feedback').select('*').eq('profile_id', id);
     return (data || []).map(rowToFeedback);
@@ -164,9 +176,5 @@ export const store = {
       action: log.action,
       details: log.details,
     });
-  },
-
-  clearAll: () => {
-    localStorage.removeItem(PROFILE_ID_KEY);
   },
 };
